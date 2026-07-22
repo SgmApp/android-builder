@@ -27,37 +27,64 @@ jobs:
         uses: android-actions/setup-android@v3
 
 
-      # 4. Install required SDK packages
+      # 4. Install Android SDK
       - name: Install Android SDK
         run: |
           yes | sdkmanager --licenses || true
+
           sdkmanager "platform-tools"
+
           sdkmanager "platforms;android-35"
+
           sdkmanager "build-tools;35.0.0"
 
 
-      # 5. Make Gradle executable
+      # 5. Grant Gradle execute permission
       - name: Grant execute permission
-        run: chmod +x gradlew
-
-
-      # 6. Build Debug APK
-      - name: Build APK
-        run: ./gradlew assembleDebug --stacktrace --info
-
-
-      # 7. Find generated APK
-      - name: Find APK
         run: |
-          echo "Searching for APK files..."
+          chmod +x gradlew
+
+
+      # 6. Clean previous build
+      - name: Clean Project
+        run: |
+          ./gradlew clean
+
+
+      # 7. Build Debug APK
+      - name: Build APK
+        run: |
+          ./gradlew assembleDebug --stacktrace --info
+
+
+      # 8. Check build output
+      - name: Check Build Output
+        run: |
+          echo "Current directory:"
+          pwd
+
+          echo ""
+          echo "Project files:"
+          ls -la
+
+          echo ""
+          echo "Build directories:"
+          find . -type d -name "build" -print
+
+          echo ""
+          echo "All APK files:"
           find . -type f -name "*.apk" -print
 
+          echo ""
+          echo "All AAB files:"
+          find . -type f -name "*.aab" -print
 
-      # 8. Upload APK
+
+      # 9. Upload APK
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: app-debug
           path: |
-            **/build/outputs/apk/**/*.apk
+            **/*.apk
           if-no-files-found: error
