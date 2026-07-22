@@ -8,35 +8,56 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+
+      # 1. Checkout source code
       - name: Checkout
         uses: actions/checkout@v4
 
+
+      # 2. Setup Java
       - name: Setup JDK
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '17'
 
+
+      # 3. Setup Android SDK
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
+
+      # 4. Install required SDK packages
       - name: Install Android SDK
         run: |
+          yes | sdkmanager --licenses || true
           sdkmanager "platform-tools"
           sdkmanager "platforms;android-35"
           sdkmanager "build-tools;35.0.0"
 
-      - name: Build APK
-        run: |
-          chmod +x gradlew
-          ./gradlew assembleDebug --stacktrace
 
+      # 5. Make Gradle executable
+      - name: Grant execute permission
+        run: chmod +x gradlew
+
+
+      # 6. Build Debug APK
+      - name: Build APK
+        run: ./gradlew assembleDebug --stacktrace --info
+
+
+      # 7. Find generated APK
       - name: Find APK
         run: |
-          find . -type f -name "*.apk"
+          echo "Searching for APK files..."
+          find . -type f -name "*.apk" -print
 
+
+      # 8. Upload APK
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: app-debug
-          path: "**/build/outputs/apk/debug/*.apk"
+          path: |
+            **/build/outputs/apk/**/*.apk
+          if-no-files-found: error
