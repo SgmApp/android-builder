@@ -4,9 +4,7 @@ on:
   workflow_dispatch:
 
 jobs:
-
   build:
-
     runs-on: ubuntu-latest
 
     steps:
@@ -28,19 +26,14 @@ jobs:
 
       - name: Install SDK
         run: |
-
           sdkmanager "platform-tools"
-
-          sdkmanager "platforms;android-35"
-
-          sdkmanager "build-tools;35.0.0"
+          sdkmanager "platforms;android-27"
+          sdkmanager "build-tools;27.0.3"
 
 
       - name: Build APK
         run: |
-
           chmod +x gradlew
-
           ./gradlew assembleDebug
 
 
