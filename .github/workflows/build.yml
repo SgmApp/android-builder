@@ -4,7 +4,9 @@ on:
   workflow_dispatch:
 
 jobs:
+
   build:
+
     runs-on: ubuntu-latest
 
     steps:
@@ -17,28 +19,36 @@ jobs:
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: 17
+          java-version: '17'
 
 
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
 
-      - name: Install SDK
+      - name: Install Android SDK
         run: |
+
           sdkmanager "platform-tools"
-          sdkmanager "platforms;android-27"
-          sdkmanager "build-tools;27.0.3"
+
+          sdkmanager "platforms;android-35"
+
+          sdkmanager "build-tools;35.0.0"
 
 
       - name: Build APK
         run: |
+
           chmod +x gradlew
+
           ./gradlew assembleDebug
 
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
+
         with:
+
           name: app-debug
+
           path: app/build/outputs/apk/debug/app-debug.apk
