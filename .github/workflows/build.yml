@@ -56,7 +56,7 @@ jobs:
 
 
       # =========================================
-      # 5. GRANT GRADLE PERMISSION
+      # 5. GRANT GRADLE EXECUTE PERMISSION
       # =========================================
 
       - name: Grant execute permission
@@ -86,20 +86,39 @@ jobs:
 
 
       # =========================================
-      # 8. CHECK APK
+      # 8. FIND APK
       # =========================================
 
-      - name: Check APK
+      - name: Find APK
+        id: find_apk
         run: |
 
-          echo "Current directory:"
-          pwd
+          echo "Searching for APK files..."
 
-          echo ""
+          APK_PATH=$(find . -type f -name "*.apk" | head -n 1)
 
-          echo "APK files found:"
 
-          find . -type f -name "*.apk" -print
+          if [ -z "$APK_PATH" ]; then
+
+            echo "ERROR: APK file not found"
+
+            echo ""
+
+            echo "All build files:"
+
+            find . -type f | sort
+
+            exit 1
+
+          fi
+
+
+          echo "APK found at:"
+
+          echo "$APK_PATH"
+
+
+          echo "apk_path=$APK_PATH" >> "$GITHUB_OUTPUT"
 
 
       # =========================================
@@ -113,6 +132,6 @@ jobs:
 
           name: app-debug
 
-          path: app/build/outputs/apk/debug/app-debug.apk
+          path: ${{ steps.find_apk.outputs.apk_path }}
 
           if-no-files-found: error
