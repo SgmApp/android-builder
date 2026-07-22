@@ -10,12 +10,12 @@ jobs:
     steps:
 
       # 1. Checkout
-      - name: Checkout source code
+      - name: Checkout
         uses: actions/checkout@v4
 
 
       # 2. Java 17
-      - name: Setup JDK 17
+      - name: Setup JDK
         uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -39,26 +39,26 @@ jobs:
           sdkmanager "build-tools;35.0.0"
 
 
-      # 5. Check project files
-      - name: Check Project
+      # 5. Check files
+      - name: Check Project Files
         run: |
           echo "Current directory:"
           pwd
 
-          echo "Project files:"
-          find . -maxdepth 3 -type f | sort
+          echo "Files:"
+          find . -maxdepth 4 -type f | sort
 
 
-      # 6. Make Gradle executable
-      - name: Grant Gradle permission
+      # 6. Gradle permission
+      - name: Grant Gradle Permission
         run: |
           chmod +x gradlew
 
 
-      # 7. Clean
-      - name: Clean Project
+      # 7. Gradle version
+      - name: Check Gradle
         run: |
-          ./gradlew clean --stacktrace
+          ./gradlew --version
 
 
       # 8. Build APK
@@ -67,35 +67,28 @@ jobs:
           ./gradlew :app:assembleDebug --stacktrace --info
 
 
-      # 9. Verify APK
-      - name: Verify APK
+      # 9. Show output
+      - name: Show Build Output
+        if: always()
         run: |
           echo "=============================="
-          echo "SEARCHING FOR APK"
+          echo "BUILD DIRECTORY"
           echo "=============================="
 
-          if [ ! -d "app/build" ]; then
-            echo "ERROR: app/build directory not found"
-            echo "Gradle build did not create output"
-            exit 1
-          fi
+          find . -type d -name "build" -print
 
-          APK=$(find app/build/outputs/apk/debug -type f -name "*.apk" | head -n 1)
+          echo "=============================="
+          echo "ALL APK FILES"
+          echo "=============================="
 
-          if [ -z "$APK" ]; then
-            echo "ERROR: APK file not found"
-            find app/build -type f -print
-            exit 1
-          fi
-
-          echo "APK FOUND:"
-          echo "$APK"
+          find . -type f -name "*.apk" -print
 
 
       # 10. Upload APK
       - name: Upload APK
+        if: success()
         uses: actions/upload-artifact@v4
         with:
           name: app-debug
-          path: app/build/outputs/apk/debug/*.apk
+          path: app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
