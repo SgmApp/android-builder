@@ -20,7 +20,7 @@
 
         <activity
 
-            android:name=".com.sgmsoft.athanpro.MainActivity"
+            android:name=".com.sgmsoft.athanproapp.MainActivity"
 
             android:exported="true">
 
