@@ -20,7 +20,7 @@
 
         <activity
 
-            android:name=".com.shafi.MainActivity"
+            android:name=".com.sgmsoft.app.MainActivity"
 
             android:exported="true">
 
