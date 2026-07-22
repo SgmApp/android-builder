@@ -4,30 +4,45 @@ on:
   workflow_dispatch:
 
 jobs:
+
   build:
+
     runs-on: ubuntu-latest
 
     steps:
 
-      # 1. Checkout source code
+      # =========================================
+      # 1. CHECKOUT SOURCE CODE
+      # =========================================
+
       - name: Checkout
         uses: actions/checkout@v4
 
 
-      # 2. Setup Java 17
+      # =========================================
+      # 2. SETUP JAVA 17
+      # =========================================
+
       - name: Setup JDK
         uses: actions/setup-java@v4
+
         with:
           distribution: temurin
           java-version: '17'
 
 
-      # 3. Setup Android SDK
+      # =========================================
+      # 3. SETUP ANDROID SDK
+      # =========================================
+
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
 
-      # 4. Install Android SDK
+      # =========================================
+      # 4. INSTALL ANDROID SDK
+      # =========================================
+
       - name: Install Android SDK
         run: |
 
@@ -40,39 +55,60 @@ jobs:
           sdkmanager "build-tools;35.0.0"
 
 
-      # 5. Grant Gradle permission
+      # =========================================
+      # 5. GRANT GRADLE PERMISSION
+      # =========================================
+
       - name: Grant execute permission
         run: |
 
           chmod +x gradlew
 
 
-      # 6. Clean project
+      # =========================================
+      # 6. CLEAN PROJECT
+      # =========================================
+
       - name: Clean Project
         run: |
 
           ./gradlew clean
 
 
-      # 7. Build APK
+      # =========================================
+      # 7. BUILD DEBUG APK
+      # =========================================
+
       - name: Build Debug APK
         run: |
 
           ./gradlew assembleDebug --stacktrace
 
 
-      # 8. Check APK
+      # =========================================
+      # 8. CHECK APK
+      # =========================================
+
       - name: Check APK
         run: |
 
-          echo "APK files:"
+          echo "Current directory:"
+          pwd
 
-          find app/build/outputs/apk -type f -name "*.apk" -print
+          echo ""
+
+          echo "APK files found:"
+
+          find . -type f -name "*.apk" -print
 
 
-      # 9. Upload APK
+      # =========================================
+      # 9. UPLOAD APK
+      # =========================================
+
       - name: Upload APK
         uses: actions/upload-artifact@v4
+
         with:
 
           name: app-debug
