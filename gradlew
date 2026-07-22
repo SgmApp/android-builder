@@ -1,11 +1,15 @@
-distributionBase=GRADLE_USER_HOME
-distributionPath=wrapper/dists
+#!/bin/sh
 
-distributionUrl=https\://services.gradle.org/distributions/gradle-8.7-bin.zip
+APP_HOME=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 
-networkTimeout=10000
+CLASSPATH=$APP_HOME/gradle/wrapper/gradle-wrapper.jar
 
-validateDistributionUrl=true
+if [ -n "$JAVA_HOME" ]; then
+    JAVA="$JAVA_HOME/bin/java"
+else
+    JAVA="java"
+fi
 
-zipStoreBase=GRADLE_USER_HOME
-zipStorePath=wrapper/dists
+exec "$JAVA" \
+    -classpath "$CLASSPATH" \
+    org.gradle.wrapper.GradleWrapperMain "$@"
