@@ -4,24 +4,23 @@ on:
   workflow_dispatch:
 
 jobs:
-
   build:
 
     runs-on: ubuntu-latest
 
     steps:
 
-      # =========================================
-      # 1. CHECKOUT SOURCE CODE
-      # =========================================
+      # ==============================
+      # 1. Checkout
+      # ==============================
 
-      - name: Checkout
+      - name: Checkout source code
         uses: actions/checkout@v4
 
 
-      # =========================================
-      # 2. SETUP JAVA 17
-      # =========================================
+      # ==============================
+      # 2. Setup Java 17
+      # ==============================
 
       - name: Setup JDK
         uses: actions/setup-java@v4
@@ -31,17 +30,17 @@ jobs:
           java-version: '17'
 
 
-      # =========================================
-      # 3. SETUP ANDROID SDK
-      # =========================================
+      # ==============================
+      # 3. Setup Android SDK
+      # ==============================
 
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
 
-      # =========================================
-      # 4. INSTALL ANDROID SDK
-      # =========================================
+      # ==============================
+      # 4. Install Android SDK
+      # ==============================
 
       - name: Install Android SDK
         run: |
@@ -55,75 +54,64 @@ jobs:
           sdkmanager "build-tools;35.0.0"
 
 
-      # =========================================
-      # 5. GRANT GRADLE EXECUTE PERMISSION
-      # =========================================
+      # ==============================
+      # 5. Gradle Permission
+      # ==============================
 
-      - name: Grant execute permission
+      - name: Grant Gradle permission
         run: |
 
-          chmod +x gradlew
+          chmod +x ./gradlew
 
 
-      # =========================================
-      # 6. CLEAN PROJECT
-      # =========================================
+      # ==============================
+      # 6. Check Gradle
+      # ==============================
 
-      - name: Clean Project
+      - name: Check Gradle
         run: |
 
-          ./gradlew clean
+          ./gradlew --version
 
 
-      # =========================================
-      # 7. BUILD DEBUG APK
-      # =========================================
+      # ==============================
+      # 7. Build APK
+      # ==============================
 
       - name: Build Debug APK
         run: |
 
-          ./gradlew assembleDebug --stacktrace
+          ./gradlew :app:assembleDebug --stacktrace --info
 
 
-      # =========================================
-      # 8. FIND APK
-      # =========================================
+      # ==============================
+      # 8. Find APK
+      # ==============================
 
       - name: Find APK
-        id: find_apk
         run: |
 
-          echo "Searching for APK files..."
+          echo "=============================="
+          echo "SEARCHING FOR APK FILES"
+          echo "=============================="
 
-          APK_PATH=$(find . -type f -name "*.apk" | head -n 1)
+          find . -type f -name "*.apk" -print
 
+          echo "=============================="
+          echo "APP BUILD DIRECTORY"
+          echo "=============================="
 
-          if [ -z "$APK_PATH" ]; then
-
-            echo "ERROR: APK file not found"
-
-            echo ""
-
-            echo "All build files:"
-
-            find . -type f | sort
-
+          if [ -d "app/build" ]; then
+            find app/build -type f -print
+          else
+            echo "app/build directory not found"
             exit 1
-
           fi
 
 
-          echo "APK found at:"
-
-          echo "$APK_PATH"
-
-
-          echo "apk_path=$APK_PATH" >> "$GITHUB_OUTPUT"
-
-
-      # =========================================
-      # 9. UPLOAD APK
-      # =========================================
+      # ==============================
+      # 9. Upload APK
+      # ==============================
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
@@ -132,6 +120,6 @@ jobs:
 
           name: app-debug
 
-          path: ${{ steps.find_apk.outputs.apk_path }}
+          path: app/build/outputs/apk/debug/app-debug.apk
 
           if-no-files-found: error
