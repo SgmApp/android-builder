@@ -1,4 +1,4 @@
-package com.sgmsoft.athanproapp;
+package com.sgmsoft.athan;
 
 import android.os.Bundle;
 
