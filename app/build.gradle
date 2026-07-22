@@ -8,7 +8,7 @@ android {
 
     defaultConfig {
 
-        applicationId "com.shafi"
+        applicationId "com.sgmsoft.app"
 
         minSdkVersion 21
 
