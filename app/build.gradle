@@ -3,12 +3,12 @@ plugins {
 }
 
 android {
-    namespace "com.sgmsoft.athan"
+    namespace "com.sgmsoft.athanpro"
 
     compileSdk 35
 
     defaultConfig {
-        applicationId "com.sgmsoft.athan"
+        applicationId "com.sgmsoft.athanpro"
 
         minSdk 26
 
