@@ -3,12 +3,12 @@ plugins {
 }
 
 android {
-    namespace "com.sgmsoft.athan"
+    namespace "com.sgmsoft.sportshub"
 
     compileSdk 35
 
     defaultConfig {
-        applicationId "com.sgmsoft.athan"
+        applicationId "com.sgmsoft.sportshub"
 
         minSdk 26
 
