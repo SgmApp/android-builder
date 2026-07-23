@@ -3,12 +3,12 @@ plugins {
 }
 
 android {
-    namespace "com.sgmsoft.hub"
+    namespace "com.sgmsoft.androidstudio"
 
     compileSdk 35
 
     defaultConfig {
-        applicationId "com.sgmsoft.hub"
+        applicationId "com.sgmsoft.androidstudio"
 
         minSdk 26
 
