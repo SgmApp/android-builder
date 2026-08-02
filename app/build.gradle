@@ -4,13 +4,13 @@ plugins {
 
 android {
 
-    namespace "com.example.athan"
+    namespace "com.example.myapplication"
 
     compileSdk 35
 
     defaultConfig {
 
-        applicationId "com.example.athan"
+        applicationId "com.example.myapplication"
 
         minSdk 26
 
