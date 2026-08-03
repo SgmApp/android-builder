@@ -1,4 +1,4 @@
-package com.sgmsoft.minarpro;
+package com.sgmapps.babyname;
 
 import android.os.Bundle;
 

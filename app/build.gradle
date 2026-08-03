@@ -4,13 +4,13 @@ plugins {
 
 android {
 
-    namespace "com.sgmsoft.minarpro"
+    namespace "com.sgmapps.babyname"
 
     compileSdk 35
 
     defaultConfig {
 
-        applicationId "com.sgmsoft.minarpro"
+        applicationId "com.sgmapps.babyname"
 
         minSdk 26
 
