@@ -1,4 +1,4 @@
-package com.sgmsoft.sportshub;
+package com.example.minarpro;
 
 import android.os.Bundle;
 

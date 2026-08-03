@@ -4,13 +4,13 @@ plugins {
 
 android {
 
-    namespace "com.sgmsoft.sportshub"
+    namespace "com.example.minarpro"
 
     compileSdk 35
 
     defaultConfig {
 
-        applicationId "com.sgmsoft.sportshub"
+        applicationId "com.example.minarpro"
 
         minSdk 26
 
