@@ -1,4 +1,4 @@
-package com.example.myapplication;
+package com.sgmsoft.minarpro;
 
 import android.os.Bundle;
 
