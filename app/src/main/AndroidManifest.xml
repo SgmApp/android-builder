@@ -24,6 +24,7 @@
 
         </activity>
 
-    </application>
+            <activity android:name=".SplashActivity" />
+</application>
 
 </manifest>
