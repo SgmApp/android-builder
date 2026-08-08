@@ -4,13 +4,13 @@ plugins {
 
 android {
 
-    namespace "com.example.myapplication"
+    namespace "com.example.athan"
 
     compileSdk 35
 
     defaultConfig {
 
-        applicationId "com.example.myapplication"
+        applicationId "com.example.athan"
 
         minSdk 26
 
@@ -45,15 +45,40 @@ android {
     }
 
 
+    // =====================================================
+    // BUILD TYPES
+    // =====================================================
+
     buildTypes {
+
+        // -------------------------------------------------
+        // DEBUG
+        // -------------------------------------------------
 
         debug {
 
             minifyEnabled false
 
-            // Debug uses the normal Android debug key.
+            /*
+             * IMPORTANT:
+             *
+             * Use the same fixed signing key for debug.
+             *
+             * This is required because GitHub Actions
+             * creates a fresh runner for every build.
+             *
+             * Without this, Android's default debug key
+             * can change between builds and the APK cannot
+             * update an already installed version.
+             */
+
+            signingConfig signingConfigs.release
         }
 
+
+        // -------------------------------------------------
+        // RELEASE
+        // -------------------------------------------------
 
         release {
 
@@ -71,6 +96,10 @@ android {
     }
 
 
+    // =====================================================
+    // JAVA
+    // =====================================================
+
     compileOptions {
 
         sourceCompatibility JavaVersion.VERSION_17
@@ -79,13 +108,20 @@ android {
     }
 
 
+    // =====================================================
+    // VIEW BINDING
+    // =====================================================
+
     buildFeatures {
 
         viewBinding true
     }
-
 }
 
+
+// =========================================================
+// DEPENDENCIES
+// =========================================================
 
 dependencies {
 
