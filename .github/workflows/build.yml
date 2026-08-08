@@ -37,9 +37,35 @@ jobs:
         if: inputs.build_type == 'debug'
         run: ./gradlew assembleDebug
 
+      - name: Create Debug output.json
+        if: inputs.build_type == 'debug'
+        run: |
+          mkdir -p app/build/outputs/apk/debug
+          cat > app/build/outputs/apk/debug/output.json <<'EOF'
+          {
+            "build_type": "debug",
+            "apk_name": "app-debug.apk",
+            "apk_path": "app/build/outputs/apk/debug/app-debug.apk",
+            "status": "success"
+          }
+          EOF
+
       - name: Build Release APK
         if: inputs.build_type == 'release'
         run: ./gradlew assembleRelease
+
+      - name: Create Release output.json
+        if: inputs.build_type == 'release'
+        run: |
+          mkdir -p app/build/outputs/apk/release
+          cat > app/build/outputs/apk/release/output.json <<'EOF'
+          {
+            "build_type": "release",
+            "apk_name": "app-release.apk",
+            "apk_path": "app/build/outputs/apk/release/app-release.apk",
+            "status": "success"
+          }
+          EOF
 
       - name: Upload Debug APK
         if: inputs.build_type == 'debug'
@@ -49,7 +75,7 @@ jobs:
           path: |
             app/build/outputs/apk/debug/app-debug.apk
             app/build/outputs/apk/debug/output.json
-          if-no-files-found: ignore
+          if-no-files-found: error
 
       - name: Upload Release APK
         if: inputs.build_type == 'release'
@@ -59,4 +85,4 @@ jobs:
           path: |
             app/build/outputs/apk/release/app-release.apk
             app/build/outputs/apk/release/output.json
-          if-no-files-found: ignore
+          if-no-files-found: error
