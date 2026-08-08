@@ -13,12 +13,24 @@ on:
           - release
 
 jobs:
+
   build:
+
     runs-on: ubuntu-latest
 
     steps:
+
+      # ==========================================
+      # CHECKOUT
+      # ==========================================
+
       - name: Checkout project
         uses: actions/checkout@v4
+
+
+      # ==========================================
+      # JAVA 17
+      # ==========================================
 
       - name: Setup Java
         uses: actions/setup-java@v4
@@ -27,45 +39,123 @@ jobs:
           java-version: 17
           cache: gradle
 
+
+      # ==========================================
+      # GRADLE
+      # ==========================================
+
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
+
+
+      # ==========================================
+      # CHECK SIGNING KEY
+      # ==========================================
+
+      - name: Check release signing key
+        if: inputs.build_type == 'release'
+        run: |
+          if [ ! -f ".signing/release.keystore" ]; then
+            echo "ERROR: release.keystore not found"
+            exit 1
+          fi
+
+          if [ ! -f ".signing/release.password" ]; then
+            echo "ERROR: release.password not found"
+            exit 1
+          fi
+
+          echo "Release signing key found."
+
+
+      # ==========================================
+      # MAKE GRADLEW EXECUTABLE
+      # ==========================================
 
       - name: Make gradlew executable
         run: chmod +x gradlew
 
+
+      # ==========================================
+      # BUILD DEBUG
+      # ==========================================
+
       - name: Build Debug APK
         if: inputs.build_type == 'debug'
-        run: ./gradlew assembleDebug
+        run: |
+          ./gradlew clean
+          ./gradlew assembleDebug
+
+
+      # ==========================================
+      # DEBUG OUTPUT JSON
+      # ==========================================
 
       - name: Create Debug output.json
         if: inputs.build_type == 'debug'
         run: |
           mkdir -p app/build/outputs/apk/debug
+
           cat > app/build/outputs/apk/debug/output.json <<'EOF'
           {
             "build_type": "debug",
             "apk_name": "app-debug.apk",
             "apk_path": "app/build/outputs/apk/debug/app-debug.apk",
-            "status": "success"
+            "status": "success",
+            "signed_with": "android-debug-key"
           }
           EOF
 
+
+      # ==========================================
+      # BUILD RELEASE
+      # ==========================================
+
       - name: Build Release APK
         if: inputs.build_type == 'release'
-        run: ./gradlew assembleRelease
+        run: |
+          ./gradlew clean
+          ./gradlew assembleRelease
+
+
+      # ==========================================
+      # RELEASE OUTPUT JSON
+      # ==========================================
 
       - name: Create Release output.json
         if: inputs.build_type == 'release'
         run: |
           mkdir -p app/build/outputs/apk/release
+
           cat > app/build/outputs/apk/release/output.json <<'EOF'
           {
             "build_type": "release",
             "apk_name": "app-release.apk",
             "apk_path": "app/build/outputs/apk/release/app-release.apk",
-            "status": "success"
+            "status": "success",
+            "signed_with": "project-pinned-release-key"
           }
           EOF
+
+
+      # ==========================================
+      # VERIFY RELEASE APK
+      # ==========================================
+
+      - name: Verify Release APK
+        if: inputs.build_type == 'release'
+        run: |
+          if [ ! -f "app/build/outputs/apk/release/app-release.apk" ]; then
+            echo "ERROR: Release APK was not created."
+            exit 1
+          fi
+
+          echo "Release APK created successfully."
+
+
+      # ==========================================
+      # UPLOAD DEBUG
+      # ==========================================
 
       - name: Upload Debug APK
         if: inputs.build_type == 'debug'
@@ -76,6 +166,11 @@ jobs:
             app/build/outputs/apk/debug/app-debug.apk
             app/build/outputs/apk/debug/output.json
           if-no-files-found: error
+
+
+      # ==========================================
+      # UPLOAD RELEASE
+      # ==========================================
 
       - name: Upload Release APK
         if: inputs.build_type == 'release'
