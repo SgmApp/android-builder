@@ -4,13 +4,13 @@ plugins {
 
 android {
 
-    namespace "com.example.athan"
+    namespace "com.sgmsoft.androidstudio"
 
     compileSdk 35
 
     defaultConfig {
 
-        applicationId "com.example.athan"
+        applicationId "com.sgmsoft.androidstudio"
 
         minSdk 26
 
