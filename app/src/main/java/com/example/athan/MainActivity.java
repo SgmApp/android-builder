@@ -1,4 +1,4 @@
-package com.sgmsoft.androidstudio;
+package com.example.athan;
 
 import android.os.Bundle;
 
