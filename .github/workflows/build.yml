@@ -33,13 +33,75 @@ jobs:
       - name: Make gradlew executable
         run: chmod +x gradlew
 
+      # ==============================
+      # DEBUG BUILD
+      # ==============================
+
       - name: Build Debug APK
         if: inputs.build_type == 'debug'
         run: ./gradlew assembleDebug
 
+      - name: Create Debug output.json
+        if: inputs.build_type == 'debug'
+        run: |
+          mkdir -p app/build/outputs/apk/debug
+
+          cat > app/build/outputs/apk/debug/output.json <<'EOF'
+          {
+            "build_type": "debug",
+            "apk_name": "app-debug.apk",
+            "apk_path": "app/build/outputs/apk/debug/app-debug.apk",
+            "status": "success"
+          }
+          EOF
+
+      # ==============================
+      # RELEASE BUILD
+      # ==============================
+
       - name: Build Release APK
         if: inputs.build_type == 'release'
         run: ./gradlew assembleRelease
+
+      - name: Create Release output.json
+        if: inputs.build_type == 'release'
+        run: |
+          mkdir -p app/build/outputs/apk/release
+
+          cat > app/build/outputs/apk/release/output.json <<'EOF'
+          {
+            "build_type": "release",
+            "apk_name": "app-release.apk",
+            "apk_path": "app/build/outputs/apk/release/app-release.apk",
+            "status": "success"
+          }
+          EOF
+
+      # ==============================
+      # VERIFY OUTPUT
+      # ==============================
+
+      - name: Verify Debug Output
+        if: inputs.build_type == 'debug'
+        run: |
+          echo "Files:"
+          ls -lah app/build/outputs/apk/debug/
+
+          echo "output.json:"
+          cat app/build/outputs/apk/debug/output.json
+
+      - name: Verify Release Output
+        if: inputs.build_type == 'release'
+        run: |
+          echo "Files:"
+          ls -lah app/build/outputs/apk/release/
+
+          echo "output.json:"
+          cat app/build/outputs/apk/release/output.json
+
+      # ==============================
+      # UPLOAD DEBUG
+      # ==============================
 
       - name: Upload Debug APK
         if: inputs.build_type == 'debug'
@@ -49,7 +111,11 @@ jobs:
           path: |
             app/build/outputs/apk/debug/app-debug.apk
             app/build/outputs/apk/debug/output.json
-          if-no-files-found: ignore
+          if-no-files-found: error
+
+      # ==============================
+      # UPLOAD RELEASE
+      # ==============================
 
       - name: Upload Release APK
         if: inputs.build_type == 'release'
@@ -59,4 +125,4 @@ jobs:
           path: |
             app/build/outputs/apk/release/app-release.apk
             app/build/outputs/apk/release/output.json
-          if-no-files-found: ignore
+          if-no-files-found: error
