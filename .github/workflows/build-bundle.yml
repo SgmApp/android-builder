@@ -1,0 +1,142 @@
+name: Build Bundle
+
+on:
+  workflow_dispatch:
+    inputs:
+
+      build_type:
+        description: Build type
+        required: true
+        default: debug
+        type: choice
+        options:
+          - debug
+          - release
+
+jobs:
+
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Checkout project
+        uses: actions/checkout@v4
+
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+          cache: gradle
+
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+
+      - name: Check release signing files
+        if: inputs.build_type == 'release'
+        run: |
+
+          if [ ! -f .signing/release.keystore ]; then
+            echo "ERROR: .signing/release.keystore not found"
+            exit 1
+          fi
+
+          if [ ! -f .signing/release.password ]; then
+            echo "ERROR: .signing/release.password not found"
+            exit 1
+          fi
+
+
+      - name: Make gradlew executable
+        run: chmod +x gradlew
+
+
+      # ============================================
+      # DEBUG BUNDLE
+      # ============================================
+
+      - name: Build Debug Bundle
+        if: inputs.build_type == 'debug'
+        run: |
+
+          ./gradlew clean
+          ./gradlew bundleDebug
+
+
+      # ============================================
+      # RELEASE BUNDLE
+      # ============================================
+
+      - name: Build Release Bundle
+        if: inputs.build_type == 'release'
+        run: |
+
+          ./gradlew clean
+          ./gradlew bundleRelease
+
+
+      # ============================================
+      # VERIFY DEBUG
+      # ============================================
+
+      - name: Verify Debug Bundle
+        if: inputs.build_type == 'debug'
+        run: |
+
+          if [ ! -f app/build/outputs/bundle/debug/app-debug.aab ]; then
+            echo "ERROR: Debug AAB was not created."
+            exit 1
+          fi
+
+
+      # ============================================
+      # VERIFY RELEASE
+      # ============================================
+
+      - name: Verify Release Bundle
+        if: inputs.build_type == 'release'
+        run: |
+
+          if [ ! -f app/build/outputs/bundle/release/app-release.aab ]; then
+            echo "ERROR: Release AAB was not created."
+            exit 1
+          fi
+
+
+      # ============================================
+      # UPLOAD DEBUG
+      # ============================================
+
+      - name: Upload Debug Bundle
+        if: inputs.build_type == 'debug'
+        uses: actions/upload-artifact@v4
+        with:
+
+          name: app-debug-bundle
+
+          path: |
+            app/build/outputs/bundle/debug/app-debug.aab
+
+          if-no-files-found: error
+
+
+      # ============================================
+      # UPLOAD RELEASE
+      # ============================================
+
+      - name: Upload Release Bundle
+        if: inputs.build_type == 'release'
+        uses: actions/upload-artifact@v4
+        with:
+
+          name: app-release-bundle
+
+          path: |
+            app/build/outputs/bundle/release/app-release.aab
+
+          if-no-files-found: error
