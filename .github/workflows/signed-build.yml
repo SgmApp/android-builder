@@ -1,0 +1,56 @@
+name: Signed Release Build
+
+on:
+  workflow_dispatch:
+
+jobs:
+  signed-build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout project
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: gradle
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Make gradlew executable
+        run: chmod +x gradlew
+
+      - name: Check signing configuration
+        run: |
+          if [ ! -f .signing/release.keystore ]; then
+            echo "ERROR: .signing/release.keystore not found."
+            exit 1
+          fi
+
+          if [ ! -f .signing/release.password ]; then
+            echo "ERROR: .signing/release.password not found."
+            exit 1
+          fi
+
+          echo "Signing files found."
+
+      - name: Build signed Release APK
+        run: ./gradlew clean assembleRelease
+
+      - name: Verify signed APK
+        run: |
+          if [ ! -f app/build/outputs/apk/release/app-release.apk ]; then
+            echo "ERROR: Signed APK was not created."
+            exit 1
+          fi
+
+      - name: Upload signed APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: signed-release-apk
+          path: app/build/outputs/apk/release/app-release.apk
+          if-no-files-found: error
