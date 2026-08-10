@@ -15,7 +15,7 @@ jobs:
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: 17
+          java-version: '17'
           cache: gradle
 
       - name: Setup Gradle
@@ -24,5 +24,8 @@ jobs:
       - name: Make gradlew executable
         run: chmod +x gradlew
 
-      - name: Check Dependencies
+      - name: Check Gradle dependencies
         run: ./gradlew dependencies
+
+      - name: Validate Gradle configuration
+        run: ./gradlew tasks
