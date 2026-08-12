@@ -17,8 +17,18 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+
+      # ============================================
+      # CHECKOUT
+      # ============================================
+
       - name: Checkout project
         uses: actions/checkout@v4
+
+
+      # ============================================
+      # JAVA
+      # ============================================
 
       - name: Setup Java
         uses: actions/setup-java@v4
@@ -27,19 +37,44 @@ jobs:
           java-version: '17'
           cache: gradle
 
+
+      # ============================================
+      # GRADLE
+      # ============================================
+
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
 
+
+      # ============================================
+      # GRADLEW
+      # ============================================
+
       - name: Make gradlew executable
         run: chmod +x gradlew
+
+
+      # ============================================
+      # BUILD DEBUG
+      # ============================================
 
       - name: Build Debug APK
         if: inputs.build_type == 'debug'
         run: ./gradlew clean assembleDebug
 
+
+      # ============================================
+      # BUILD RELEASE
+      # ============================================
+
       - name: Build Release APK
         if: inputs.build_type == 'release'
         run: ./gradlew clean assembleRelease
+
+
+      # ============================================
+      # VERIFY DEBUG
+      # ============================================
 
       - name: Verify Debug APK
         if: inputs.build_type == 'debug'
@@ -49,6 +84,16 @@ jobs:
             exit 1
           fi
 
+          if [ !f app/build/outputs/apk/debug/output-metadata.json ]; then
+            echo "ERROR: output-metadata.json not found."
+            exit 1
+          fi
+
+
+      # ============================================
+      # VERIFY RELEASE
+      # ============================================
+
       - name: Verify Release APK
         if: inputs.build_type == 'release'
         run: |
@@ -57,18 +102,37 @@ jobs:
             exit 1
           fi
 
+          if [ ! -f app/build/outputs/apk/release/output-metadata.json ]; then
+            echo "ERROR: output-metadata.json not found."
+            exit 1
+          fi
+
+
+      # ============================================
+      # UPLOAD DEBUG APK + JSON
+      # ============================================
+
       - name: Upload Debug APK
         if: inputs.build_type == 'debug'
         uses: actions/upload-artifact@v4
         with:
           name: app-debug
-          path: app/build/outputs/apk/debug/app-debug.apk
+          path: |
+            app/build/outputs/apk/debug/app-debug.apk
+            app/build/outputs/apk/debug/output-metadata.json
           if-no-files-found: error
+
+
+      # ============================================
+      # UPLOAD RELEASE APK + JSON
+      # ============================================
 
       - name: Upload Release APK
         if: inputs.build_type == 'release'
         uses: actions/upload-artifact@v4
         with:
           name: app-release
-          path: app/build/outputs/apk/release/app-release.apk
+          path: |
+            app/build/outputs/apk/release/app-release.apk
+            app/build/outputs/apk/release/output-metadata.json
           if-no-files-found: error
