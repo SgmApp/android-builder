@@ -2,55 +2,277 @@ name: Signed Release Build
 
 on:
   workflow_dispatch:
+    inputs:
+
+      build_type:
+        description: "Build type"
+        required: true
+        default: "release"
+
+      module:
+        description: "Gradle module"
+        required: true
+        default: "app"
+
 
 jobs:
+
   signed-build:
+
     runs-on: ubuntu-latest
 
+
     steps:
+
+      # =====================================================
+      # CHECKOUT
+      # =====================================================
+
       - name: Checkout project
         uses: actions/checkout@v4
+
+
+      # =====================================================
+      # JAVA
+      # =====================================================
 
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: '17'
+          java-version: "17"
           cache: gradle
+
+
+      # =====================================================
+      # GRADLE
+      # =====================================================
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
 
+
+      # =====================================================
+      # GRADLEW
+      # =====================================================
+
       - name: Make gradlew executable
         run: chmod +x gradlew
 
-      - name: Check signing configuration
+
+      # =====================================================
+      # PREPARE SIGNING FILES
+      # =====================================================
+
+      - name: Prepare signing configuration
+        env:
+          SIGNING_KEYSTORE_BASE64: ${{ secrets.SIGNING_KEYSTORE_BASE64 }}
+          SIGNING_STORE_PASSWORD: ${{ secrets.SIGNING_STORE_PASSWORD }}
+          SIGNING_KEY_ALIAS: ${{ secrets.SIGNING_KEY_ALIAS }}
+          SIGNING_KEY_PASSWORD: ${{ secrets.SIGNING_KEY_PASSWORD }}
+
         run: |
-          if [ ! -f .signing/release.keystore ]; then
-            echo "ERROR: .signing/release.keystore not found."
+
+          set -e
+
+
+          echo "Preparing signing configuration..."
+
+          mkdir -p .signing
+
+
+          # -------------------------------------------------
+          # Check secrets
+          # -------------------------------------------------
+
+          if [ -z "$SIGNING_KEYSTORE_BASE64" ]; then
+            echo "ERROR: SIGNING_KEYSTORE_BASE64 is missing."
             exit 1
           fi
 
-          if [ ! -f .signing/release.password ]; then
-            echo "ERROR: .signing/release.password not found."
+
+          if [ -z "$SIGNING_STORE_PASSWORD" ]; then
+            echo "ERROR: SIGNING_STORE_PASSWORD is missing."
             exit 1
           fi
+
+
+          if [ -z "$SIGNING_KEY_ALIAS" ]; then
+            echo "ERROR: SIGNING_KEY_ALIAS is missing."
+            exit 1
+          fi
+
+
+          if [ -z "$SIGNING_KEY_PASSWORD" ]; then
+            echo "ERROR: SIGNING_KEY_PASSWORD is missing."
+            exit 1
+          fi
+
+
+          # -------------------------------------------------
+          # Decode keystore
+          # -------------------------------------------------
+
+          echo "$SIGNING_KEYSTORE_BASE64" |
+            base64 --decode |
+            > .signing/release.keystore
+
+
+          # -------------------------------------------------
+          # Password
+          # -------------------------------------------------
+
+          printf '%s' "$SIGNING_STORE_PASSWORD" \
+            > .signing/release.password
+
+
+          # -------------------------------------------------
+          # Alias
+          # -------------------------------------------------
+
+          printf '%s' "$SIGNING_KEY_ALIAS" \
+            > .signing/release.alias
+
+
+          # -------------------------------------------------
+          # Key password
+          # -------------------------------------------------
+
+          printf '%s' "$SIGNING_KEY_PASSWORD" \
+            > .signing/release.keypassword
+
+
+          # -------------------------------------------------
+          # Permissions
+          # -------------------------------------------------
+
+          chmod 600 .signing/release.keystore
+          chmod 600 .signing/release.password
+          chmod 600 .signing/release.alias
+          chmod 600 .signing/release.keypassword
+
+
+          echo "Signing files prepared."
+
+
+      # =====================================================
+      # CHECK SIGNING FILES
+      # =====================================================
+
+      - name: Check signing configuration
+        run: |
+
+          set -e
+
+
+          echo "Checking signing files..."
+
+
+          if [ ! -f .signing/release.keystore ]; then
+            echo "ERROR: release.keystore not found."
+            exit 1
+          fi
+
+
+          if [ ! -s .signing/release.keystore ]; then
+            echo "ERROR: release.keystore is empty."
+            exit 1
+          fi
+
+
+          if [ ! -f .signing/release.password ]; then
+            echo "ERROR: release.password not found."
+            exit 1
+          fi
+
+
+          if [ ! -f .signing/release.alias ]; then
+            echo "ERROR: release.alias not found."
+            exit 1
+          fi
+
+
+          if [ ! -f .signing/release.keypassword ]; then
+            echo "ERROR: release.keypassword not found."
+            exit 1
+          fi
+
 
           echo "Signing files found."
 
+
+      # =====================================================
+      # BUILD
+      # =====================================================
+
       - name: Build signed Release APK
-        run: ./gradlew clean assembleRelease
+        run: |
+
+          set -e
+
+          ./gradlew clean assembleRelease \
+            --no-daemon \
+            --stacktrace
+
+
+      # =====================================================
+      # VERIFY APK
+      # =====================================================
 
       - name: Verify signed APK
         run: |
-          if [ ! -f app/build/outputs/apk/release/app-release.apk ]; then
+
+          set -e
+
+
+          APK_PATH="app/build/outputs/apk/release/app-release.apk"
+
+
+          if [ ! -f "$APK_PATH" ]; then
+
             echo "ERROR: Signed APK was not created."
+
+            echo ""
+            echo "Available APK files:"
+
+            find app/build/outputs \
+              -type f \
+              -name "*.apk" \
+              -print \
+              || true
+
             exit 1
+
           fi
+
+
+          if [ ! -s "$APK_PATH" ]; then
+
+            echo "ERROR: APK file is empty."
+
+            exit 1
+
+          fi
+
+
+          echo "Signed APK found."
+
+          ls -lh "$APK_PATH"
+
+
+      # =====================================================
+      # UPLOAD APK
+      # =====================================================
 
       - name: Upload signed APK
         uses: actions/upload-artifact@v4
+
         with:
+
           name: signed-release-apk
+
           path: app/build/outputs/apk/release/app-release.apk
+
           if-no-files-found: error
+
+          retention-days: 7
