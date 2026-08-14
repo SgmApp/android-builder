@@ -1,118 +1,56 @@
-name: Signed Build
+name: Signed Release Build
 
 on:
   workflow_dispatch:
-    inputs:
-      build_type:
-        description: "Build type"
-        required: true
-        type: choice
-        options:
-          - APK
-          - AAB
-
-      module:
-        description: "Gradle module"
-        required: true
-        default: "app"
 
 jobs:
-
   signed-build:
-
     runs-on: ubuntu-latest
 
     steps:
-
-      - name: Checkout
+      - name: Checkout project
         uses: actions/checkout@v4
 
-      - name: Setup JDK 17
+      - name: Setup Java
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: "17"
+          java-version: '17'
+          cache: gradle
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
 
       - name: Make gradlew executable
         run: chmod +x gradlew
 
-      # ============================================
-      # CREATE KEYSTORE
-      # ============================================
-
-      - name: Decode keystore
-        env:
-          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+      - name: Check signing configuration
         run: |
-          echo "$KEYSTORE_BASE64" | base64 --decode > signing.jks
+          if [ ! -f .signing/release.keystore ]; then
+            echo "ERROR: .signing/release.keystore not found."
+            exit 1
+          fi
 
-      # ============================================
-      # BUILD APK
-      # ============================================
+          if [ ! -f .signing/release.password ]; then
+            echo "ERROR: .signing/release.password not found."
+            exit 1
+          fi
 
-      - name: Build signed APK
-        if: ${{ inputs.build_type == 'APK' }}
-        env:
-          STORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
-          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
-          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+          echo "Signing files found."
+
+      - name: Build signed Release APK
+        run: ./gradlew clean assembleRelease
+
+      - name: Verify signed APK
         run: |
-          ./${{ inputs.module }}/gradlew \
-            :${{ inputs.module }}:assembleRelease \
-            -Pandroid.injected.signing.store.file="$GITHUB_WORKSPACE/signing.jks" \
-            -Pandroid.injected.signing.store.password="$STORE_PASSWORD" \
-            -Pandroid.injected.signing.key.alias="$KEY_ALIAS" \
-            -Pandroid.injected.signing.key.password="$KEY_PASSWORD"
+          if [ ! -f app/build/outputs/apk/release/app-release.apk ]; then
+            echo "ERROR: Signed APK was not created."
+            exit 1
+          fi
 
-      # ============================================
-      # BUILD AAB
-      # ============================================
-
-      - name: Build signed AAB
-        if: ${{ inputs.build_type == 'AAB' }}
-        env:
-          STORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
-          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
-          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
-        run: |
-          ./${{ inputs.module }}/gradlew \
-            :${{ inputs.module }}:bundleRelease \
-            -Pandroid.injected.signing.store.file="$GITHUB_WORKSPACE/signing.jks" \
-            -Pandroid.injected.signing.store.password="$STORE_PASSWORD" \
-            -Pandroid.injected.signing.key.alias="$KEY_ALIAS" \
-            -Pandroid.injected.signing.key.password="$KEY_PASSWORD"
-
-      # ============================================
-      # APK ARTIFACT
-      # ============================================
-
-      - name: Upload APK
-        if: ${{ inputs.build_type == 'APK' }}
+      - name: Upload signed APK
         uses: actions/upload-artifact@v4
         with:
-          name: signed-apk
-          path: |
-            ${{ inputs.module }}/build/outputs/apk/release/*.apk
+          name: signed-release-apk
+          path: app/build/outputs/apk/release/app-release.apk
           if-no-files-found: error
-
-      # ============================================
-      # AAB ARTIFACT
-      # ============================================
-
-      - name: Upload AAB
-        if: ${{ inputs.build_type == 'AAB' }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: signed-aab
-          path: |
-            ${{ inputs.module }}/build/outputs/bundle/release/*.aab
-          if-no-files-found: error
-
-      # ============================================
-      # DELETE KEYSTORE
-      # ============================================
-
-      - name: Remove keystore
-        if: always()
-        run: |
-          rm -f signing.jks
