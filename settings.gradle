@@ -14,5 +14,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "Android Studio"
+rootProject.name = "__APP_NAME__"
 include(":app")

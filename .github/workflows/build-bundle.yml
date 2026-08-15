@@ -24,19 +24,28 @@ jobs:
       - name: Make gradlew executable
         run: chmod +x gradlew
 
-      - name: Build Android App Bundle
+      - name: Build Release Bundle
         run: ./gradlew clean bundleRelease
+
+      - name: Find generated AAB
+        run: |
+          echo "Generated AAB files:"
+          find . -type f -name "*.aab" -print
 
       - name: Verify AAB
         run: |
-          if [ ! -f app/build/outputs/bundle/release/app-release.aab ]; then
-            echo "ERROR: AAB was not created."
+          AAB_COUNT=$(find . -type f -name "*.aab" | wc -l)
+
+          if [ "$AAB_COUNT" -eq 0 ]; then
+            echo "ERROR: No AAB file was created."
             exit 1
           fi
+
+          echo "AAB build successful."
 
       - name: Upload AAB
         uses: actions/upload-artifact@v4
         with:
           name: app-release-bundle
-          path: app/build/outputs/bundle/release/app-release.aab
+          path: '**/*.aab'
           if-no-files-found: error

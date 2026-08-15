@@ -1,4 +1,4 @@
-package com.sgmsoft.androidstudio;
+package __PACKAGE_NAME__;
 
 import android.os.Bundle;
 
