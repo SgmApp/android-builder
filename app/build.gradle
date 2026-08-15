@@ -4,17 +4,17 @@ plugins {
 
 android {
 
-    namespace "__PACKAGE_NAME__"
+    namespace "com.sgmsoft.androidstudio"
 
-    compileSdk __COMPILE_SDK__
+    compileSdk 35
 
     defaultConfig {
 
-        applicationId "__PACKAGE_NAME__"
+        applicationId "com.sgmsoft.androidstudio"
 
-        minSdk __MIN_SDK__
+        minSdk 26
 
-        targetSdk __TARGET_SDK__
+        targetSdk 35
 
         versionCode 1
 
@@ -114,7 +114,7 @@ android {
 
     buildFeatures {
 
-        viewBinding __VIEW_BINDING__
+        viewBinding true
     }
 }
 
